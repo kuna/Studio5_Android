@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:orientation="vertical"
+        android:background="#ff000000"> 
+ 
+    <RelativeLayout
+        android:id="@+id/video_layout"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:gravity="center_vertical">
+        
+	    <com.swm.studio5.ui.VideoPreview 
+	            android:id="@+id/camera_preview"
+	            android:layout_width="420px"
+	            android:layout_height="315px"
+	            android:layout_centerHorizontal="true"
+	            android:layout_centerVertical="true"
+	    /> 
+	 
+	    <VideoView
+	            android:id="@+id/video_frame"
+	            android:visibility="gone"
+	            android:layout_width="fill_parent"
+	            android:layout_height="fill_parent"
+	    /> 
+	    
+        <TextView
+            android:id="@+id/video_status"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="12px"
+            android:layout_marginRight="12px"
+            android:layout_alignParentRight="true"
+            android:layout_alignParentBottom="true"
+            android:gravity="right"
+            android:textColor="#ffffffff"
+            android:text="REC"
+            android:textSize="12dip" />
+	</RelativeLayout>
+    
+    
+    <RelativeLayout
+        android:layout_width="fill_parent"
+        android:layout_height="80px"
+        android:orientation="horizontal">
+        
+        <Button
+            android:id="@+id/record"
+            android:layout_width="64px"
+            android:layout_height="64px"
+			android:layout_centerVertical="true"/>
+        
+        <TextView
+            android:id="@+id/record_status"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+			android:layout_centerVertical="true"
+			android:layout_toRightOf="@+id/record"
+			android:layout_marginLeft="12px"
+            android:gravity="left"
+            android:textColor="#ffffffff"
+            android:text="Press to REC"
+            android:textSize="20dip"
+            android:textStyle="bold" />
+        
+        <!--
+         Note: In this TextView the paddingRight="2"
+         attribute is required because otherwise the
+         text's drop shadow will be clipped.
+        -->
+
+        <TextView
+            android:id="@+id/record_detail"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+			android:layout_centerVertical="true"
+            android:layout_marginRight="8px"
+            android:layout_alignParentRight="true"
+            android:gravity="right"
+            android:text="RecordStatus(T)"
+            android:textColor="#ffffffff"
+            android:textSize="20dip" />
+ 
+	</RelativeLayout>
+</LinearLayout> 
