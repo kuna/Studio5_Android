@@ -9,15 +9,14 @@
         android:id="@+id/video_layout"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:gravity="center_vertical">
+        android:orientation="vertical">
         
 	    <com.swm.studio5.ui.VideoPreview 
 	            android:id="@+id/camera_preview"
 	            android:layout_width="420px"
 	            android:layout_height="315px"
-	            android:layout_centerHorizontal="true"
-	            android:layout_centerVertical="true"
+	            android:layout_alignParentLeft="true"
+	            android:layout_alignParentTop="true"
 	    /> 
 	 
 	    <VideoView
@@ -28,17 +27,40 @@
 	    /> 
 	    
         <TextView
-            android:id="@+id/video_status"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="12px"
-            android:layout_marginRight="12px"
+            android:id="@+id/video_fps"
+            android:layout_width="160dp"
+            android:layout_height="160dp"
             android:layout_alignParentRight="true"
-            android:layout_alignParentBottom="true"
-            android:gravity="right"
+            android:gravity="center"
+            android:text="FPS"
+            android:background="#ff0093dd"
             android:textColor="#ffffffff"
-            android:text="REC"
-            android:textSize="12dip" />
+            android:textScaleX="0.8"
+            android:textSize="28dip" />
+        <TextView
+            android:id="@+id/video_hd"
+            android:layout_width="160dp"
+            android:layout_height="160dp"
+            android:layout_alignParentRight="true"
+        	android:layout_below="@+id/video_fps"
+            android:gravity="center"
+            android:text="HD"
+            android:background="#ffffa200"
+            android:textColor="#ffffffff"
+            android:textScaleX="0.8"
+            android:textSize="28dip" />
+        <TextView
+            android:id="@+id/video_kbps"
+            android:layout_width="160dp"
+            android:layout_height="160dp"
+            android:layout_alignParentRight="true"
+        	android:layout_below="@+id/video_hd"
+            android:gravity="center"
+            android:text="kbps"
+            android:background="#ffdd137b"
+            android:textColor="#ffffffff"
+            android:textScaleX="0.8"
+            android:textSize="28dip" />
 	</RelativeLayout>
     
     
@@ -46,23 +68,14 @@
         android:layout_width="fill_parent"
         android:layout_height="80px"
         android:orientation="horizontal">
-        
-        <Button
-            android:id="@+id/record"
-            android:layout_width="64px"
-            android:layout_height="64px"
-			android:layout_centerVertical="true"/>
-        
+
         <TextView
             android:id="@+id/record_status"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
 			android:layout_centerVertical="true"
-			android:layout_toRightOf="@+id/record"
-			android:layout_marginLeft="12px"
             android:gravity="left"
-            android:textColor="#ffffffff"
-            android:text="Press to REC"
+            android:text=""
             android:textSize="20dip"
             android:textStyle="bold" />
         
@@ -81,6 +94,7 @@
             android:layout_alignParentRight="true"
             android:gravity="right"
             android:text="RecordStatus(T)"
+            android:textScaleX="0.8"
             android:textColor="#ffffffff"
             android:textSize="20dip" />
  

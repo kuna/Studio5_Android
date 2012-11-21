@@ -31,7 +31,10 @@ import android.net.LocalSocket;
 import android.net.LocalSocketAddress;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.os.SystemClock;
+import android.text.Html;
 import android.util.Log;
 import android.view.Display;
 import android.view.SurfaceHolder;
@@ -49,7 +52,7 @@ import android.widget.VideoView;
 public class VideoCamera extends CallScreen implements
 		SurfaceHolder.Callback, OnClickListener, OnLongClickListener, OnErrorListener {
     private static final String TAG = "videocamera";
-    private static final float VIDEO_ASPECT_RATIO = 176.0f / 144.0f;
+    private static final float VIDEO_ASPECT_RATIO = 720.0f/480.0f;
     
     VideoPreview mVideoPreview;
     SurfaceHolder mSurfaceHolder = null;
@@ -64,13 +67,29 @@ public class VideoCamera extends CallScreen implements
 
     private MediaRecorder mMediaRecorder;
 	private TextView mFPS;
+	private TextView mHD;
+	private TextView mkbps;
 	private TextView mRecordingTimeView;
+	private TextView mRecordDetail;
 	
     boolean mMediaRecorderRecording = false;
     boolean isAvailableSprintFFC,useFront = true;
     boolean videoQualityHigh;
 	private RtpSocket rtp_socket;
 	private Thread t;
+	private int fps;
+	private int kbps;
+	
+	private Handler mHandler = new UIHandler();
+	private class UIHandler extends Handler {
+		@Override
+		public void handleMessage(Message msg) {
+			mFPS.setText(Html.fromHtml("<strong>FPS</strong><br>" + fps + ""));
+			mHD.setText(Html.fromHtml("<strong><i>HD</i></strong><br>" + (videoQualityHigh?"ENABLED":"DISABLED") + ""));
+			mkbps.setText(Html.fromHtml(kbps + "<br><strong>kbps</strong>"));
+			mHandler.sendEmptyMessageDelayed(1, 500);
+		}
+	}
 	
 	private boolean initializeVideo() {
         Log.v(TAG, "initializeVideo");
@@ -115,7 +134,7 @@ public class VideoCamera extends CallScreen implements
         mMediaRecorder.setOutputFile(sender.getFileDescriptor());
 
         if (videoQualityHigh) {
-            mMediaRecorder.setVideoSize(800,480);
+            mMediaRecorder.setVideoSize(720,480);
         } else {
             mMediaRecorder.setVideoSize(320,240);
         }
@@ -135,10 +154,9 @@ public class VideoCamera extends CallScreen implements
             return false;
         }
 
-        // set videopreview event handler
-        //mVideoPreview.setOnLongClickListener(this);
-	    //mVideoPreview.setOnClickListener(this);
-	    Log.i(TAG, "event listener registered");
+        // start recording
+        mMediaRecorderRecording = true;
+        startVideoRecording();
 	    
         return true;
 	}
@@ -165,6 +183,17 @@ public class VideoCamera extends CallScreen implements
         requestWindowFeature(Window.FEATURE_PROGRESS);
         setScreenOnFlag();
         setContentView(R.layout.video_camera);
+        
+        // get objects
+        mRecordingTimeView = (TextView) findViewById(R.id.record_status);
+        mRecordingTimeView.setBackgroundResource(R.drawable.logo);
+        mRecordingTimeView.getLayoutParams().width = 300;
+        mRecordDetail = (TextView) findViewById(R.id.record_detail);
+        mRecordDetail.setText(Html.fromHtml("connected<br>studiofive.premi.st"));
+        
+        mFPS = (TextView) findViewById(R.id.video_fps);
+        mHD  = (TextView) findViewById(R.id.video_hd);
+        mkbps  = (TextView) findViewById(R.id.video_kbps);
 
         // set VideoPreview window
         mVideoPreview = (VideoPreview) findViewById(R.id.camera_preview);
@@ -174,8 +203,16 @@ public class VideoCamera extends CallScreen implements
         Display d = getWindowManager().getDefaultDisplay();
         RelativeLayout rl = (RelativeLayout) findViewById(R.id.video_layout);
         rl.getLayoutParams().height = d.getHeight() - 80;
-        mVideoPreview.getLayoutParams().width = d.getWidth();
-        mVideoPreview.getLayoutParams().height = d.getHeight();
+        mVideoPreview.getLayoutParams().height = d.getHeight()-80;
+        mVideoPreview.getLayoutParams().width = (int) (mVideoPreview.getLayoutParams().height * VIDEO_ASPECT_RATIO);
+        int nw = d.getWidth() - mVideoPreview.getLayoutParams().width;
+        int nh = (d.getHeight() - 80) / 3;
+        mFPS.getLayoutParams().width = nw;
+        mHD.getLayoutParams().width = nw;
+        mkbps.getLayoutParams().width = nw;
+        mFPS.getLayoutParams().height = nh;
+        mHD.getLayoutParams().height = nh;
+        mkbps.getLayoutParams().height = nh;
 
         // don't set mSurfaceHolder here. We have it set ONLY within
         // surfaceCreated / surfaceDestroyed, other parts of the code
@@ -184,14 +221,9 @@ public class VideoCamera extends CallScreen implements
         SurfaceHolder holder = mVideoPreview.getHolder();
         holder.addCallback(this);
         holder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
-
-        mRecordingTimeView = (TextView) findViewById(R.id.record_status);
-        //mVideoFrame = (VideoView) findViewById(R.id.video_frame);
-        Button b = (Button) findViewById(R.id.record);
-        b.setOnClickListener(this);
         
         mMediaRecorderRecording = false;
-        setRecordingUI();
+        videoQualityHigh = true;
 	}
 	
     @Override
@@ -203,10 +235,13 @@ public class VideoCamera extends CallScreen implements
 
 	@Override
 	protected void onResume() {
-		super.onResume();
-		
 		setSocket();
         mVideoPreview.setVisibility(View.VISIBLE);
+
+        mHandler.removeMessages(1);
+        mHandler.sendEmptyMessage(1);
+        
+		super.onResume();
         //if (!mMediaRecorderRecording) initializeVideo();
 	}
 
@@ -318,38 +353,7 @@ public class VideoCamera extends CallScreen implements
 
 
 	public void onClick(View arg0) {
-		Log.i(TAG, "startVideoRecording");
-		
-		mMediaRecorderRecording = !mMediaRecorderRecording;
-		setRecordingUI();
-		if (mMediaRecorderRecording)
-			startVideoRecording();
-		else
-			stopVideoRecording();
 	}
-	
-	private void setRecordingUI() {
-		/** set Button/TextView UI **/
-		TextView t1 = (TextView) findViewById(R.id.record_status);
-		TextView t2 = (TextView) findViewById(R.id.video_status);
-		Button b = (Button) findViewById(R.id.record);
-
-		if (!mMediaRecorderRecording) {
-			t1.setTextColor(Color.parseColor("#FFFFFF"));
-			t2.setTextColor(Color.parseColor("#FFFF00"));
-			t1.setText("Press to REC");
-			t2.setText("бс STOP");
-			b.setBackgroundResource(R.drawable.play);
-		} else {
-			t1.setTextColor(Color.parseColor("#FF0000"));
-			t2.setTextColor(Color.parseColor("#FF0000"));
-			t1.setText("Press to STOP");
-			t2.setText("б▄ REC");
-			b.setBackgroundResource(R.drawable.stop);
-			
-		}
-	}
-
 
 	public boolean onLongClick(View arg0) {
 		// TODO Auto-generated method stub
@@ -365,7 +369,7 @@ public class VideoCamera extends CallScreen implements
 	
     /** MAIN PART **/
     private void startVideoRecording() {
-    	Log.v(TAG, "startVideoRecording");
+    	Log.v(TAG, "startVideoRecording!!");
 
 		//RtpStreamSender.delay = 1;
 
@@ -380,10 +384,10 @@ public class VideoCamera extends CallScreen implements
 		}               
 
 		(t = new Thread() {
-			private int fps;
 			private boolean change;
 
 			public void run() {
+				Log.v(TAG, "Thread Starts");
 				int frame_size = 1400;
 				byte[] buffer = new byte[frame_size + 14];
 				buffer[12] = 4;
@@ -414,12 +418,15 @@ public class VideoCamera extends CallScreen implements
 					}
 					if (num < 0) {
 						try {
+							// pause a while when exception
 							sleep(20);
 						} catch (InterruptedException e) {
 							break;
 						}
 						continue;                                                       
 					}
+					kbps = num;
+					
 					number += num;
 					head += num;
 					try {
@@ -507,15 +514,15 @@ public class VideoCamera extends CallScreen implements
 			}
 
 			private boolean videoValid() {
-				return true;
+				return mMediaRecorderRecording;
 			}
 		}).start();   
 	}
 
     private void stopVideoRecording() {
-    	t.stop();
-    	rtp_socket.close();
-    	rtp_socket = null;
+    	//t.stop();
+    	//rtp_socket.close();
+    	//rtp_socket = null;
     	
     	/*
 	    Log.v(TAG, "stopVideoRecording");
